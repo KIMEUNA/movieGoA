@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="schedule">
+
+<!-- 	<sql id="where">
+		<where>
+			<if test="cinemaIdx != null">
+				cinemaidx=#{cinemaIdx}
+			</if>
+			<if test="multiplexIdx != null">
+				multiplexidx=#{multiplexIdx}
+			</if>
+		 </where>
+	</sql> -->
+
+	<select id="getMaxSeq" resultType="Integer">
+		SELECT schedule_seq.NEXTVAL FROM DUAL
+	</select>
+	
+	<!-- 상영 일정 추가 -->
+	<insert id="insertSchedule" parameterType="com.moviego.movie.schedule.Schedule">
+		INSERT INTO schedule(scheduleIdx, multiplexIdx, startTime, endTime, movieIdx)
+			VALUES(#{scheduleIdx}, #{multiplexIdx},#{startTime}, #{endTime}, #{movieIdx})
+	</insert>
+	
+	<insert id="insertPrice" parameterType="com.moviego.movie.schedule.Schedule">
+		insert into price(priceidx, scheduleidx, price, kind) 
+						values(price_seq.nextval, #{scheduleIdx},#{price},#{kind})
+	</insert>
+
+	<!-- 전체 상영 일정 리스트 불러오기 -->
+	<select id="getScheduleList" parameterType="map" resultType="com.moviego.movie.schedule.Schedule">
+	   SELECT scheduleIdx, startTime, endTime, m1.*, m2.*
+	   	FROM schedule s
+			JOIN
+				(
+				SELECT multiplexIdx, name multiplexName, cinemaName, grade multiplexGrade
+				FROM multiplex m1
+        			JOIN cinema c ON m1.cinemaIdx = c.cinemaIdx
+        		WHERE m1.cinemaIdx = #{cinemaIdx}) m1 ON s.multiplexIdx = m1.multiplexIdx
+	  		JOIN 
+	        	(
+            	SELECT m2.movieIdx, movieName, director, runTime, nvl(effect, '없음') effect, 
+            	m2.gradeIdx, gradeName, regdate
+              	FROM movie m2
+              		LEFT OUTER JOIN effect e ON m2.movieIdx=e.movieIdx
+              		JOIN grade g ON m2.gradeIdx = g.gradeIdx) m2 ON s.movieIdx = m2.movieIdx
+	   WHERE TO_DATE(startTime, 'YYYY-MM-DD HH24:MI') BETWEEN 
+       		TO_DATE(#{date}, 'YYYY-MM-DD HH24:MI') AND
+       		TO_DATE(#{date}, 'YYYY-MM-DD HH24:MI') +1
+	   ORDER BY s.multiplexIdx, TO_DATE(startTime, 'YYYY-MM-DD HH24:MI')
+	</select>
+	
+	<!-- 상영관 별 상영 일정 리스트 불러오기 -->
+	<select id="getScheduleList_m" parameterType="map" resultType="com.moviego.movie.schedule.Schedule">
+	   SELECT scheduleIdx, startTime, endTime, m1.*, m2.*
+	   	FROM schedule s
+			JOIN
+				(
+				SELECT multiplexIdx, name multiplexName, m1.cinemaIdx, cinemaName, grade multiplexGrade
+				FROM multiplex m1
+        			JOIN cinema c ON m1.cinemaIdx = c.cinemaIdx
+        		WHERE multiplexIdx = #{multiplexIdx}) m1 ON s.multiplexIdx = m1.multiplexIdx
+	  		JOIN 
+	        	(
+            	SELECT m2.movieIdx, movieName, director, runTime, nvl(effect, '없음') effect, 
+            	m2.gradeIdx, gradeName, regdate
+              	FROM movie m2
+              		LEFT OUTER JOIN effect e ON m2.movieIdx=e.movieIdx
+              		JOIN grade g ON m2.gradeIdx = g.gradeIdx) m2 ON s.movieIdx = m2.movieIdx
+	   WHERE TO_DATE(startTime, 'YYYY-MM-DD HH24:MI') BETWEEN 
+       		TO_DATE(#{date}, 'YYYY-MM-DD HH24:MI') AND
+       		TO_DATE(#{date}, 'YYYY-MM-DD HH24:MI') +1
+	   ORDER BY s.multiplexIdx, TO_DATE(startTime, 'YYYY-MM-DD HH24:MI')
+	</select>	
+	
+	<!-- 상영관 목록 -->
+	<select id="getMultiplexList" parameterType="Integer" resultType="com.moviego.movie.schedule.Schedule">
+		SELECT multiplexIdx, name multiplexName, grade multiplexGrade, m.cinemaIdx, cinemaName
+		FROM multiplex m
+			JOIN cinema c ON m.cinemaIdx = c.cinemaIdx
+		WHERE m.cinemaIdx = #{cinemaIdx}
+	</select>
+	
+	<!-- 지점 별 상영중인 영화 리스트 -->
+	<select id="getShowMovieList" parameterType="map" resultType="com.moviego.movie.schedule.Schedule">
+		SELECT m.movieIdx, movieName, director, regdate, runTime
+		FROM movie m
+		JOIN (
+					SELECT DISTINCT(movieIdx)
+					FROM schedule s
+					JOIN (
+							SELECT multiplexIdx
+							FROM multiplex
+							WHERE cinemaidx=#{cinemaIdx}
+							) tb1
+							ON s.multiplexIdx = tb1.multiplexIdx
+					WHERE TO_DATE(startTime, 'YYYY-MM-DD HH24:MI') > SYSDATE) tb2 
+		ON m.movieIdx = tb2.movieIdx
+		ORDER BY regdate DESC
+	</select>
+	
+	<select id="getMultiplex" parameterType="Integer" resultType="com.moviego.movie.schedule.Schedule">
+		select multiplexidx, name multiplexname, grade multiplexgrade, m.cinemaIdx, cinemaName
+		from multiplex m
+		JOIN cinema c ON m.CINEMAIDX = c.CINEMAIDX
+		where multiplexidx = #{multiplexIdx}
+	</select>
+	
+	<!--  -->
+	<select id="getMovieInfo" parameterType="Integer" resultType="com.moviego.movie.schedule.Schedule">
+		select m.movieidx, moviename, genrename, gradename, nvl(effect, '없음') effect, runtime, 
+		nation, director, regdate 
+		from movie m 		
+		join genre g1 on m.genreidx=g1.genreidx
+		join grade g2 on m.gradeidx=g2.gradeidx 
+		left outer join effect e on m.movieidx=e.movieidx
+		where m.movieidx=#{movieIdx}
+	</select>		
+	
+	<!-- 상영 일정 삭제 -->
+	<delete id="deleteSchedule" parameterType="Integer">
+		DELETE FROM schedule WHERE scheduleIdx = #{scheduleIdx}
+	</delete>
+	
+	<!-- 삭제할 상영 일정의 가격 삭제 -->
+	<delete id="deletePrice" parameterType="Integer">
+		DELETE FROM price WHERE scheduleIdx = #{scheduleIdx}
+	</delete>
+	
+	<!-- 상영 일정 수정 -->
+	<update id="updateSchedule" parameterType="com.moviego.movie.schedule.Schedule">
+		 UPDATE schedule 
+		 SET movieIdx=#{movieIdx}, startTime=#{startTime}, endTime=#{endTime}
+		 WHERE scheduleIdx = #{scheduleIdx}
+	</update>
+
+</mapper>

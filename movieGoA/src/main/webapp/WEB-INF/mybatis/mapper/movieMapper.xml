@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="movie">
+
+	<insert id="insertMovie" parameterType="com.moviego.movie.movie.Movie"> 
+		INSERT INTO movie(movieidx, genreidx, gradeidx, moviename, runtime,
+										nation, director, actor, regdate) 
+					VALUES (#{movieIdx}, #{genreIdx}, #{gradeIdx}, #{movieName}, 
+								#{runTime, jdbcType=VARCHAR}, #{nation, jdbcType=VARCHAR}, 
+								#{director, jdbcType=VARCHAR}, #{actor, jdbcType=VARCHAR}, 
+								TO_CHAR(TO_DATE(#{regdate, jdbcType=VARCHAR}), 'YY/MM/DD'))								
+	</insert>
+	
+	<insert id="insertEffect" parameterType="com.moviego.movie.movie.Movie">
+		INSERT INTO effect(movieIdx, effect)
+			VALUES (#{movieIdx}, #{effect})
+	</insert>
+	
+	<insert id="insertIntro" parameterType="com.moviego.movie.movie.Movie">
+		INSERT INTO intro(movieIdx, poster, story)
+			VALUES (#{movieIdx}, #{poster}, #{story})
+	</insert>
+								
+<!-- 	<sql id="where-list">
+		<if test="searchValue != null and searchValue !='' ">
+			<if test="searchKey=='movieName'"> INSTR(moviename, #{searchValue}) &gt; 0 </if>
+			<if test="searchKey=='director'"> INSTR(director, #{searchValue}) &gt; 0 </if>
+		</if>
+	</sql> -->
+	
+	<sql id="where-list">		
+		<if test="searchKey=='movieName'"> INSTR(moviename, #{searchValue}) &gt; 0 </if>
+		<if test="searchKey=='director'"> INSTR(director, #{searchValue}) &gt; 0 </if>	
+	</sql>
+	
+	<!-- 영화 개수 -->
+	<select id="getDataCount" parameterType="map" resultType="Integer">
+		SELECT NVL(COUNT(*), 0) FROM movie
+		<where>
+			<if test="searchValue != null and searchValue !='' ">
+				<include refid="where-list" />
+			</if>
+		</where>
+	</select>
+
+	<!-- 등록된 영화 리스트 -->
+	<select  id="getMovieList" parameterType="map" resultType="com.moviego.movie.movie.Movie">
+		SELECT * FROM(
+		SELECT ROWNUM rnum, tb.* FROM (
+		select m.movieidx, moviename, regdate, director, nation, nvl(poster, 'noImg') poster 
+		from movie m 
+		left outer join intro i on m.movieidx=i.movieidx
+		<where>
+			<if test="searchValue != null and searchValue !='' ">
+  	 			<include refid="where-list"/>
+  	 		</if>
+       	</where>
+		order by regdate desc
+		
+	<![CDATA[
+    	) tb WHERE ROWNUM <=#{end}
+    	  ) WHERE rnum >= #{start}
+    ]]>	
+	</select>
+		
+	<!-- 등록된 영화들 중 해당 지점에서 상영 중인 영화를 제외한 영화 리스트 -->
+	<select id="getMovieList2" parameterType="map" resultType="com.moviego.movie.movie.Movie">
+		SELECT * FROM(
+		SELECT ROWNUM rnum, tb.* FROM (		
+		SELECT m.movieIdx, movieName, runTime, regdate, director, nation, nvl(poster, 'noImg') poster, nvl(effect, '없음') effect
+		FROM movie m
+			LEFT OUTER JOIN intro i ON m.movieIdx = i.movieIdx
+			LEFT OUTER JOIN effect e ON m.movieIdx = e.movieIdx
+		WHERE m.movieidx NOT IN (
+				SELECT m.movieIdx
+				FROM movie m
+					JOIN (
+						SELECT DISTINCT(movieIdx)
+						FROM schedule s
+							JOIN (
+								SELECT multiplexIdx
+								FROM multiplex
+								WHERE cinemaIdx = #{cinemaIdx}
+								) tb1 ON s.multiplexIdx = tb1.multiplexIdx
+						WHERE TO_DATE(startTime, 'YYYY-MM-DD HH24:MI') > SYSDATE) tb2
+							ON m.movieIdx = tb2.movieIdx)
+			<if test="searchValue != null and searchValue !='' ">
+				AND <include refid="where-list"/>		
+			</if>
+		ORDER BY regdate DESC
+		<![CDATA[
+    	) tb WHERE ROWNUM <=#{end}
+    	  ) WHERE rnum >= #{start}
+  	  ]]>	
+	</select>
+
+	<!-- 영화 정보 읽기 -->
+	<select id="getMovieInfo" parameterType="Integer" resultType="com.moviego.movie.movie.Movie">
+		select m.movieidx, genrename, gradename, nvl(effect, '없음') effect, moviename, runtime, nation, director,
+				actor, regdate, nvl(poster,'noimg') poster, nvl(story, '없음') story 
+		from movie m 		
+		join genre g1 on m.genreidx=g1.genreidx
+		join grade g2 on m.gradeidx=g2.gradeidx 
+		left outer join effect e on m.movieidx=e.movieidx
+		left outer join intro i on m.movieidx=i.movieidx 
+		where m.movieidx=#{movieIdx}
+	</select>
+	
+	<!-- 상영관 목록 -->
+	<select id="getMultiplexList" parameterType="Integer" resultType="com.moviego.movie.movie.Movie">
+		SELECT multiplexIdx, name multiplexName, grade multiplexGrade, m.cinemaIdx, cinemaName
+		FROM multiplex m
+			JOIN cinema c ON m.cinemaIdx = c.cinemaIdx
+		WHERE m.cinemaIdx = #{cinemaIdx}
+	</select>
+
+</mapper>

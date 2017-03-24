@@ -1,0 +1,35 @@
+    
+    
+    
+
+INSERT INTO member1(mIdx) VALUES (member_seq.NEXTVAL);
+INSERT INTO member2(mIdx, id, name, pass, birth, email, tel) VALUES 
+    (member_seq.CURRVAL, 'admin', '관리자', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', '1991-04-17', '1000cws@naver.com', '01092794378');
+    
+
+
+INSERT INTO memberAuthority(num, id, authority) VALUES (memberAuthority_seq.NEXTVAL, 'admin', 0);
+INSERT INTO memberAuthority(num, id, authority) VALUES (memberAuthority_seq.NEXTVAL, 'abc123', 5);
+
+
+UPDATE member2 SET pass='c10688a28512e1550645c69fdf13e7ab6b74ed87094bbe01f28e886490b70239'
+     WHERE id='abc123';
+     
+
+insert into city(cityidx, city_name) values(city_seq.nextval, '서울');
+insert into local(localidx, cityidx, local_name) values(local_seq.nextval, 1, '강남');
+
+insert into cinema(CINEMAIDX, LOCALIDX, CINEMANAME, MULTIPLEX, addr1, addr2, addr3, EXPLANATION) 
+					values(cinema_seq.nextval, 1, '강남점', '7', '강', '남', '구', '상영관 7개당~~');
+					
+insert into MULTIPLEX(MULTIPLEXidx, CINEMAIDX, name, grade, ENABLE, seat) 
+						values(MULTIPLEX_seq.nextval, 1, '1관', 3, 1, 150);
+						
+insert into schedule(scheduleidx, MULTIPLEXIDX, starttime, inning) 
+					values(schedule_seq.nextval, 1, '2017-01-28', 4);
+					
+insert into grade(gradeidx, gradename) values(grade_seq.nextval, '스릴러');
+insert into genre(genreidx, genrename) values(genre_seq.nextval, '스릴러');
+
+insert into movie(movieidx, genreidx, gradeidx, moviename, runtime, nation, director, actor, regdate) 
+          values(movie_seq.nextval, 1, 1, '너의 이름은', '2:13', '일본', '몰라', '미츠하', sysdate);
