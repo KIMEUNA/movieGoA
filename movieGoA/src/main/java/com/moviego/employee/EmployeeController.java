@@ -18,8 +18,7 @@ public class EmployeeController {
 //	@RequestMapping(value="/login")
 //	public String login() {
 //		return "employee/login";
-//	}
-	
+//	}	
 	// 접근 오서라이제이션(Authorization:권한)이 없는 경우
 	
 	@RequestMapping(value="/noAuthorized")

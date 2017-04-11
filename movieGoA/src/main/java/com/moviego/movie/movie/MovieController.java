@@ -75,8 +75,6 @@ public class MovieController {
 		model.addAttribute("result", result);
 		model.addAttribute("nationCd", nationCd);
 		model.addAttribute("movieTypeCd", movieTypeCd);
-		// model.addAttribute("treeview", "1");
-		// model.addAttribute("subMenu", "0");
 
 		return ".admin4.movie.movie.movieList";
 	}

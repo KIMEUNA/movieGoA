@@ -58,7 +58,7 @@
   		    <url>http://download.osgeo.org/webdav/geotools/</url>
   	    </repository>
   	    
-  	     <repository>
+  	    <repository>
             <id>localRepository</id>  
             <url>file://${project.basedir}/libs</url>
         </repository> 
@@ -67,7 +67,7 @@
 	
 	<dependencies>
 	
-		    <dependency>
+		<dependency>
             <groupId>kobis</groupId>
             <artifactId>opcl</artifactId>
             <version>1.0.0</version>
