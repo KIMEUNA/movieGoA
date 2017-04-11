@@ -33,12 +33,12 @@
 		var pass = frm.txtPass;
 		
 		if(!id.value) {
-			alert("아이디 ㄴㄴ");
+			alert("아이디를 입력해주세요.");
 			id.focus();
 			return false;
 		}
 		if(!pass.value) {
-			alert("비번 ㄴㄴ")
+			alert("비밀번호를 입력해주세요.")
 			pass.focus();
 			return false;
 		}

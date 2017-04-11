@@ -51,17 +51,15 @@ public class MovieController {
 			}
 		}
 
-		// 영화코드조회 서비스 호출 (boolean isJson, String curPage, String
-		// itemPerPage,String directorNm,
-		// String movieCd, String movieNm, String openStartDt,String openEndDt,
-		// String ordering,
-		// String prdtEndYear, String prdtStartYear, String repNationCd,
-		// String[] movieTypeCdArr)
+		// 영화코드조회 서비스 호출 (boolean isJson, String curPage, String itemPerPage,String directorNm, String movieCd, String movieNm,
+		//String openStartDt,String openEndDt, String ordering, String prdtEndYear, String prdtStartYear, String repNationCd, String[] movieTypeCdArr)
 		String movieCdResponse = KOARservice.getMovieList(true, dto.getCurPage(), dto.getItemPerPage(),
 				dto.getMovieName(), dto.getDirector(), dto.getOpenStartDt(), dto.getOpenEndDt(), dto.getPrdtStartYear(),
 				dto.getPrdtEndYear(), dto.getRepNationCd(), movieType);
 
+		//국가 별 조회
 		String nationCdResponse = KOARservice.getComCodeList(true, "2204");
+		//영화 타입(장르) 별 조회
 		String movieTypeCdResponse = KOARservice.getComCodeList(true, "2201");
 
 		// Json 라이브러리를 통해 Handling
